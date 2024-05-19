@@ -32,16 +32,15 @@
 function v = expandTaskSeriesParallel(v, source, sink, depth, numBranches, ifCond)
 % returns a conditional DAG task represented as a list of vertices v, by recursively expanding blocks to either conditional/parallel branches or terminal vertices    
     
-    global maxCondBranches;
+    global maxCondBranches
     global maxParBranches;
     global p_cond;
     global p_par;
     global p_term;
     
-    depthFactor = max(maxCondBranches, maxParBranches); 
+    %depthFactor = max(maxCondBranches, maxParBranches); 
+    depthFactor = maxParBranches;
     horSpace = depthFactor^depth;  
-    
-    %rng(0,'twister'); 
    
     if isempty(source) && isempty(sink)
         
@@ -57,19 +56,9 @@ function v = expandTaskSeriesParallel(v, source, sink, depth, numBranches, ifCon
         v(2).depth = -depth;
         v(2).width = 0;
         
-        %if randi([1 100]) <= 100* p_cond  % G: p_cond = 0 => false
-        %    v(1).cond = 1;
-        %    condBranches = randi([2 maxCondBranches]);
-        %    v = expandTaskSeriesParallel(v, 1, 2, depth - 1, condBranches, 1);
-        %else                        
-
-
-        % G: Recursively fill the graph with parallel branches
-        % G: The number of parBranches can go down to as low as 2 for following iterations
         parBranches = randi([2 maxParBranches]); % G: Between 2 and 6 branches
         v = expandTaskSeriesParallel(v, 1, 2, depth - 1, parBranches, 0); 
 
-        %end
     else
         % G: Case for node other than source and sink
         step = horSpace / (numBranches - 1);
@@ -102,11 +91,6 @@ function v = expandTaskSeriesParallel(v, source, sink, depth, numBranches, ifCon
                 v(sink).pred = [v(sink).pred current + 1];
                 v(sink).cond = 0;
                 
-                % if v(source).cond == 1
-                %     v(current + 1).condPred = [v(current + 1).condPred source];
-                %     v(current + 1).branchList = [v(current + 1).branchList i];
-                % end
-                
                 v(current + 1).condPred = [v(current + 1).condPred v(source).condPred];
                 v(current + 1).branchList = [v(current + 1).branchList v(source).branchList];
                 
@@ -126,14 +110,6 @@ function v = expandTaskSeriesParallel(v, source, sink, depth, numBranches, ifCon
                 v(sink).cond = 0;
                 parBranches = randi([2 maxParBranches]);
                 
-                % if v(source).cond == 1
-                %    v(current + 1).condPred = [v(current + 1).condPred source];
-                %    v(current + 2).condPred = [v(current + 2).condPred source];
-                %    
-                %    v(current + 1).branchList = [v(current + 1).branchList i];
-                %    v(current + 2).branchList = [v(current + 2).branchList i];
-                %end
-                
                 v(current + 1).condPred = [v(current + 1).condPred v(source).condPred];
                 v(current + 2).condPred = [v(current + 2).condPred v(source).condPred];
                 
@@ -141,39 +117,6 @@ function v = expandTaskSeriesParallel(v, source, sink, depth, numBranches, ifCon
                 v(current + 2).branchList = [v(current + 2).branchList v(source).branchList];
                 
                 v = expandTaskSeriesParallel(v, current + 1, current + 2, depth - 1, parBranches, 0);              
-                
-            % elseif x == 1   % conditional subgraph
-                % 
-                % v(current + 1).pred = source;
-                % v(current + 1).depth = depth;
-                % v(current + 1).width = w1 + step * (i - 1);
-                % 
-                % v(source).succ = [v(source).succ, current + 1];
-                % v(source).cond = ifCond;
-                % v(current + 2).succ = sink;
-                % v(current + 2).depth = -depth;
-                % v(current + 2).width = w2 + step * (i - 1);
-                % 
-                % v(sink).pred = [v(sink).pred current + 2];
-                % v(sink).cond = 0;
-                % condBranches = randi([2 maxCondBranches]);
-                % 
-                % if v(source).cond == 1
-                    % v(current + 1).condPred = [v(current + 1).condPred source];
-                    % v(current + 2).condPred = [v(current + 2).condPred source];
-                    % 
-                    % v(current + 1).branchList = [v(current + 1).branchList i];
-                    % v(current + 2).branchList = [v(current + 2).branchList i];
-                % end
-                % 
-                % v(current + 1).condPred = [v(current + 1).condPred v(source).condPred];
-                % v(current + 2).condPred = [v(current + 2).condPred v(source).condPred];
-                % 
-                % v(current + 1).branchList = [v(current + 1).branchList v(source).branchList];
-                % v(current + 2).branchList = [v(current + 2).branchList v(source).branchList];
-                % 
-                % v = expandTaskSeriesParallel(v, current + 1, current + 2, depth - 1, condBranches, 1);
-                % 
             end
         end
     end

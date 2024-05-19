@@ -49,7 +49,7 @@ p_term = 0.2;
 
 tasksetsPerU = 1;
 addProb = 0.1;
-save_rate = 25;
+ave_rate = 25;
 % lost = 0;
 % Umin = 0;
 % Umax = m;
@@ -62,19 +62,20 @@ save_rate = 25;
 
 print = 0; 
 print_dag = 1;
-maxParBranches = 4;
+maxParBranches = 3;
 rec_depth = 2;
 Cmin = 10;
-Cmax = 100;
+Cmax = 200;
 beta = 0.1;
+
+m = 2;
+f = 3; 
+num_tasks = 2000;
 
 task = struct('v', {}, 'D', {}, 'T', {}, 'wcw', {}, 'vol', {}, 'len', {},...
     'R', {}, 'mksp', {}, 'Z', {}, 'W', {}, 'maxWCET', {}, 'Wfmax', {},...
     'cmaxs', {}, 'lengths', {}, 'paths',{});
 
-num_tasks = 1;
-m = 2;
-f = 3; 
 accepted_joint = 0;
 accepted_separate = 0;
 m_sum = 0;
@@ -92,7 +93,7 @@ joint_equal_separate = 0;
 for i = 1:num_tasks
 
     dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f);
-    if print_dag == 1
+    if print_dag == 1 && i == 1
         printTask(dag.v);
     end
     D = dag.D;
@@ -113,8 +114,11 @@ for i = 1:num_tasks
         dag.success = 1;
         accepted_separate = accepted_separate + 1;
     end
+
     if R_joint > R_separate
-        fprintf('ANOMALY\n');
+        fprintf("R_joint: %d\n", R_joint);
+        fprintf("R_separ: %d\n", R_separate);
+        fprintf('\nANOMALY\n');
     end
        
     if (R_joint <= D) && (R_separate > D)
@@ -141,7 +145,7 @@ fprintf('Avg improvement in response time: %d\n', diff);
 
 fprintf('#(Joint <= Separate): %d\n', joint_smaller);
 fprintf('#(Joint == Separate): %d\n', joint_equal_separate);
-fprintf('#(Joint dominates Separate): %d', joint_dom);
+fprintf('#(Joint dominates Separate): %d (%.4f)', joint_dom, joint_dom / num_tasks);
 
 fprintf('\nJoint Acceptance ratio: %.2f\n', accepted_joint / num_tasks);
 fprintf('\nSepar Acceptance ratio: %.2f\n', accepted_separate / num_tasks);

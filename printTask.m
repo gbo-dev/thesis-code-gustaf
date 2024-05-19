@@ -41,7 +41,9 @@ function printTask(v)
 %         title(headline);
 %     end
     for i = 1 : length(v)   % plot vertices
-        plotCircle(v(i).width, v(i).depth, 0.1, i, v);
+        if v(i).C ~= 0
+            plotCircle(v(i).width, v(i).depth, 0.1, i, v);
+        end
         p = p + 1;
     end
     

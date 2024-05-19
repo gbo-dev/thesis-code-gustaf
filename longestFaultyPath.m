@@ -7,15 +7,11 @@ function [Lfmax, index] = longestFaultyPath(dag, f)
     global print;
     
     % dag.lengths: set of lengths of all complete paths in DAG
-    % NOTE: Selects first path if no other, MATLAB mad without it
-    % index = 1; 
 
     Lfmax = 0;
     for i = 1:length(dag.lengths)
         cmax = dag.cmaxs(i);
-        % fprintf("cmax: %d\n", cmax);
         L = dag.lengths(i);
-        % fprintf("L: %d\n", L);
         Lf = L + f * cmax;
 
         if Lf > Lfmax

@@ -34,27 +34,29 @@
 function [dag, W, maxWCET, Wfmax, cmaxs, lengths, paths] = generateSchedParams(i, beta, m, f, cmaxs, lengths, paths)
     
     global task;
-    
     dag = task(i);
+
+    [dag.cmaxs, dag.lengths, dag.paths] = getAllPaths(dag.v);
+    dag = imbalanceDAG(dag, 0.5);
+    [dag.cmaxs, dag.lengths, dag.paths] = getAllPaths(dag.v);
     
-    Tmin = dag.len;
-    Tmax = dag.wcw / beta;
+    %max(dag.lengths)
+
+    dag.W = computeVolume(dag.v); % dag.wcw same thing as no cond paths, but to make sure
+    Tmin = dag.len; % NOTE: Ensure OK when used
+    Tmax = dag.W / beta;
     
     int1 = Tmin;
     int2 = Tmax;
     dag.T = randi([int1, int2]);
 
     dag.maxWCET = findMaxWCET(dag);
-    dag.W = computeVolume(dag.v);
     dag.Wfmax = dag.W + dag.maxWCET * f;
-
-    % Lfmax = longestFaultyPath(dag, f);       
-
-    [dag.cmaxs, dag.lengths, dag.paths] = getAllPaths(dag.v);
     [Lfmax, ~] = longestFaultyPath(dag, f);
 
     LowerBoundOnValidDeadline = max(dag.Wfmax/m, Lfmax);
-    dag.D = LowerBoundOnValidDeadline + randi([72,90]);
+    %dag.D = LowerBoundOnValidDeadline + randi([72,90]);
+    dag.D = LowerBoundOnValidDeadline * 1.10;
 
     % LowerBoundOnValidDeadline
     % dag.D = LowerBoundOnValidDeadline * (1+beta);
