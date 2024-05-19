@@ -1,0 +1,57 @@
+% compute the number of paralle paths
+
+
+function [pat,paths] = computeNumbPaths(H, h) %h is the 
+roots = [];
+sinks = [];
+pat = {};
+%paths = {};
+%plot(H);
+
+
+%list of all the sinks and roots
+for i=1: length(h)
+    success = successors(H, i);
+    predess = predecessors(H, i);
+    if isempty(success)
+        sinks = [sinks i];
+    end
+    if isempty(predess)
+        roots = [roots i];
+    end
+end
+% a = ['sinks: ', num2str(sinks)];
+% disp(a);
+% b = ['roots: ', num2str(roots)];
+% disp(b);
+
+%do allpaths from all the roots to all the sinks
+for x = 1: length(roots)
+    for y = 1: length(sinks)
+        pat = [pat; allpaths(H, roots(x), sinks(y))];
+    end
+end
+
+
+[rows, ~] = size(pat);
+%cols = length(pat{1});
+%paths = zeros(rows, cols);
+
+
+% for a = 1:rows
+%     for b = 1: cols       
+%         for c =1: length(h)
+%             pat(pat==c) = h(c);
+% 
+% %             if isequal((pat{a}(b)), c)
+% %                 %paths{a}(b) = h(c);
+% %             end
+%         end
+%     end
+% end
+%paths
+paths = rows;
+
+%pat
+
+end

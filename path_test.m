@@ -1,0 +1,66 @@
+% edges = [1,2;1,5;2,3;2,3;2,14;2,18;3,16;5,6;5,14;5,15];
+% g = digraph(edges(:, 1), edges(:, 2));
+
+src=[1, 1, 1,  2 ,  4]';
+dest=[2, 3, 4,  6,  6]';
+
+G = digraph(src, dest);
+plot(G)
+s = 1;
+e = 6;
+%test = allpaths(G, 1, 5)
+
+test = successors(G, 5);
+% if isempty(test)
+%     disp('hello');
+% end
+%function selsectedpaths = getPaths(G, s, e)
+%get all paths
+allpaths = getpaths(G);
+%only keep those paths that link s and e and only that part of the path between s and e (or e and s)
+
+keep = false(size(allpaths)); %keep is a zero matrix thw size of allpaths
+for pidx = 1:numel(allpaths) %numel returns the number of elements in a matrix --> for each node in the matrix
+    [found, where] = ismember([s, e], allpaths{pidx}); %check if s can be found in e, found = 1 is yes, and where is the lowest index at where it is found
+    if all(found) %if all found is =1
+        keep(pidx) = true; % switch the zero in the matrix to 1
+        allpaths{pidx} = allpaths{pidx}(min(where):max(where)); %only keep part of the path between the two node        
+    end
+end
+selectedpaths = allpaths(keep);
+%end
+
+% for i = 1: (length(selectedpaths)- 1)
+%     for j = i+1: length(selectedpaths) 
+%         disp(selectedpaths(i));
+%         disp(selectedpaths(i+1));
+%         if isequal(selectedpaths(i), selectedpaths(j))
+%             selectedpaths(j,:) = [];
+%         end
+%     end
+
+%end
+
+selectedpaths
+
+function paths = getpaths(g)
+    %return all paths from a DAG.
+    %the function will error in toposort if the graph is not a DAG
+    paths = {};     %path computed so far
+    endnodes = [];  %current end node of each path for easier tracking
+   for nid = toposort(g)    %iterate over all nodes
+        if indegree(g, nid) == 0    %node is a root, simply add it for now (indegree gives a column vector with thwe number of arrows to it)
+            paths = [paths; nid]; %#ok<AGROW>, 
+            endnodes = [endnodes; nid]; %#ok<AGROW>
+        end
+        %find successors of current node and replace all paths that end with the current node with cartesian product of paths and successors
+        toreplace = endnodes == nid;    %all paths that need to be edited
+        s = successors(g, nid);
+        if ~isempty(s) %if it is not an endnode, aka it has successors
+            [p, tails] = ndgrid(paths(toreplace), s);  %cartesian product
+            paths = [cellfun(@(p, t) [p, t], p(:), num2cell(tails(:)), 'UniformOutput', false);  %append paths and successors
+                 paths(~toreplace)];
+            endnodes = [tails(:); endnodes(~toreplace)];
+        end
+   end
+end
