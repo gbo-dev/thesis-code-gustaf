@@ -62,15 +62,15 @@ ave_rate = 25;
 
 print = 0; 
 print_dag = 1;
-maxParBranches = 3;
+maxParBranches = 4;
 rec_depth = 3;
 Cmin = 10;
 Cmax = 200;
 beta = 0.1;
 
 m = 2;
-f = 4; 
-num_tasks = 100;
+f = 2;
+num_tasks = 1000;
 
 task = struct('v', {}, 'D', {}, 'T', {}, 'wcw', {}, 'vol', {}, 'len', {},...
     'R', {}, 'mksp', {}, 'Z', {}, 'W', {}, 'maxWCET', {}, 'Wfmax', {},...
@@ -78,6 +78,7 @@ task = struct('v', {}, 'D', {}, 'T', {}, 'wcw', {}, 'vol', {}, 'len', {},...
 
 accepted_joint = 0;
 accepted_separate = 0;
+accepted_he = 0;
 m_sum = 0;
 
 diff_sum = 0;
@@ -93,6 +94,8 @@ joint_equal_separate = 0;
 % Generate a number of tasks (not based on utilization as of now)
 % Runs the joint and separate tests on the DAG to examine response times 
 
+
+% TODO: Better deadline generation again, once again grows quickly with increase of 'f' (way more than R of S/J/He)
 for i = 1:num_tasks
 
     dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f);
@@ -103,6 +106,13 @@ for i = 1:num_tasks
 
     [R_joint, m_max] = JM_RT(dag, f, m);
     [R_separate, Lfmax] = SM_RT(dag, f, m);
+    R_He = HE_RT(dag, f, m);
+
+
+    if i == 1
+        fprintf("D: %d\n", D);
+        fprintf("He R: %d\n", R_He);
+    end
 
     joint_delta_sum = joint_delta_sum + D - R_joint;
     separ_delta_sum = separ_delta_sum + D - R_separate;
@@ -116,6 +126,11 @@ for i = 1:num_tasks
     if R_separate <= D
         dag.success = 1;
         accepted_separate = accepted_separate + 1;
+    end
+
+    if R_He <= D
+        dag.success = 1;
+        accepted_he = accepted_he + 1;
     end
 
     if R_joint > R_separate
@@ -152,4 +167,9 @@ fprintf('#(Joint dominates Separate): %d (%.4f)', joint_dom, joint_dom / num_tas
 
 fprintf('\nJoint Acceptance ratio: %.2f\n', accepted_joint / num_tasks);
 fprintf('\nSepar Acceptance ratio: %.2f\n', accepted_separate / num_tasks);
+fprintf('\nHe    Acceptance ratio: %.2f\n', accepted_he / num_tasks);
+
+% fprintf('\nJoint    #Accepted: %d\n', accepted_joint);
+% fprintf('\nSeparate #Accepted: %d\n', accepted_separate);
+% fprintf('\nHe       #Accepted: %d\n', accepted_he);
 

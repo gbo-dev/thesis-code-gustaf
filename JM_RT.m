@@ -14,7 +14,7 @@ function [R_max, m_max] = JM_RT(dag, f, m)
     % (f-q): Nodes not in LP suffers (f-q) faults 
     % Find LP and (maxWCET not in LP) for q = [0,f] (LP changes with faults)
     for q = 0:f
-        [Lfmax, index] = longestFaultyPath(dag, q);
+        [~, index] = longestFaultyPath(dag, q);
         % dag.paths(1,index).list
         
         max_WCET_excluding_LP = findMaxWCETExcludeCurrLongestPath(dag, index);
