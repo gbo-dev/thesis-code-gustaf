@@ -1,6 +1,10 @@
 
+% Author: Gustaf Bodin 
 
 function dag = imbalanceDAG(dag, probability) 
+    % Takes a DAG and a probability to start modifying a path's WCETs
+    % Uses 'nullify' once a path is to be modified to change most, 
+    % but not all WCETs to 0
     
     % for i = 3:length(dag.v)
     %     if rand < probability
@@ -10,7 +14,7 @@ function dag = imbalanceDAG(dag, probability)
 
     % [dag.cmaxs, dag.lengths, dag.paths] = getAllPaths(dag.v);
     
-    nullify = 0.9; 
+    nullify = 0.8; 
     for i = 1:length(dag.paths)
         if rand < probability
             for j = 3:length(dag.paths(1,i).list)

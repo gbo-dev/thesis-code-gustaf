@@ -2,7 +2,7 @@
 % Author: 2024 Gustaf Bodin
 
 function [r, Lfmax] = SM_RT(dag, f, m)
-    % Individual Maximization Response Time estimate
+    % Separate Maximization Response Time estimate
 
     global print;
     

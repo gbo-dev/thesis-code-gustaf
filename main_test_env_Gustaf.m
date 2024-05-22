@@ -26,7 +26,7 @@
 % Boston, MA 02110-1301 USA.
 %
 %
-    % Author: 2015 Alessandra Melani
+    % Author: 2015 Alessandra Melani (Modified by Gustaf Bodin)
 %
 
 close all;
@@ -63,14 +63,14 @@ ave_rate = 25;
 print = 0; 
 print_dag = 1;
 maxParBranches = 3;
-rec_depth = 2;
+rec_depth = 3;
 Cmin = 10;
 Cmax = 200;
 beta = 0.1;
 
 m = 2;
-f = 3; 
-num_tasks = 2000;
+f = 4; 
+num_tasks = 100;
 
 task = struct('v', {}, 'D', {}, 'T', {}, 'wcw', {}, 'vol', {}, 'len', {},...
     'R', {}, 'mksp', {}, 'Z', {}, 'W', {}, 'maxWCET', {}, 'Wfmax', {},...
@@ -89,6 +89,9 @@ diff = 0;
 joint_delta_sum = 0;
 separ_delta_sum = 0;
 joint_equal_separate = 0; 
+
+% Generate a number of tasks (not based on utilization as of now)
+% Runs the joint and separate tests on the DAG to examine response times 
 
 for i = 1:num_tasks
 

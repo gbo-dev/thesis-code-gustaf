@@ -2,6 +2,8 @@
 % Author: Gustaf (From Melani)
 
 function dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f)
+    % Modified Melani 'generateDAG' function to use 'generateSchedParams' 
+    % instead of 'generateSchedParameters'
 
     global task;
 
