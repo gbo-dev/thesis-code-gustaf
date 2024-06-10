@@ -53,7 +53,7 @@ function [dag, W, maxWCET, Wfmax, cmaxs, lengths, paths] = generateSchedParams(i
 
     LowerBoundOnValidDeadline = max(dag.Wfmax/m, Lfmax);
     %dag.D = LowerBoundOnValidDeadline + randi([72,90]);
-    dag.D = LowerBoundOnValidDeadline * 1.10;
+    dag.D = LowerBoundOnValidDeadline * 1.1; 
 
     % LowerBoundOnValidDeadline
     % dag.D = LowerBoundOnValidDeadline * (1+beta);
@@ -67,5 +67,5 @@ function [dag, W, maxWCET, Wfmax, cmaxs, lengths, paths] = generateSchedParams(i
     % fprintf('Wfmax/m: %d\n', Wfmax/m);
     % fprintf('Lfmax: %d\n'w, Lfmax);
 
-    % dag.D = randi([max((Wfmax/m), Lfmax), round(Lfmax * 1.1)]);
+    %dag.D = randi([max((dag.Wfmax/m), Lfmax), round(Lfmax * 1.01)]);
 end

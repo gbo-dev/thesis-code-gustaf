@@ -7,23 +7,33 @@ function R_min = HE_RT(dag, f, m)
     global print;
 
     R_min = realmax;
-    % m_max = 0;
 
-    % p: path index
-    % k: m - 1
     
     [Lfmax, index] = longestFaultyPath(dag, f);
     Wfmax = dag.Wfmax;
 
     k = m - 1;
 
+    % p: path index
+
     % Order dag.lengths in descending order
     path_lens = sort(dag.lengths, 'descend');
 
+    % skip_longest: avoid removing the length of the longest path twice (already apart of Lfmax)
+    skip_longest = 1; 
+
     for j = 0:k
-        % TODO: Ensure this works when j = 0, i.e. "p = 1:0"
         path_len_sum = 0;
         for p = 1:j
+            if j == 0
+                fprintf("ANOMALY, He: j = 0\n");
+            end
+            if skip_longest == 1
+                if dag.lengths(index) == path_lens(p)
+                    skip_longest == 0;
+                    continue;
+                end
+            end 
             path_len_sum = path_len_sum + path_lens(p);
         end
 
