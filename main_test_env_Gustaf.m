@@ -110,8 +110,10 @@ for i = 1:num_tasks
 
 
     if i == 1
-        fprintf("D: %d\n", D);
-        fprintf("He R: %d\n", R_He);
+        fprintf("Deadline 1: %d\n", round(D));
+        fprintf("Joint    R: %d\n", round(R_joint));
+        fprintf("Separate R: %d\n", round(R_separate));
+        fprintf("He       R: %d\n", round(R_He));
     end
 
     joint_delta_sum = joint_delta_sum + D - R_joint;
@@ -159,15 +161,9 @@ diff = diff / num_tasks;
 fprintf('\nNumber of tasks: %d\n', num_tasks);
 fprintf('Number of faults: %d\n', f);
 
-fprintf('Avg improvement in response time: %d\n', diff);
-
-fprintf('#(Joint <= Separate): %d\n', joint_smaller);
-fprintf('#(Joint == Separate): %d\n', joint_equal_separate);
-fprintf('#(Joint dominates Separate): %d (%.4f)', joint_dom, joint_dom / num_tasks);
-
-fprintf('\nJoint Acceptance ratio: %.2f\n', accepted_joint / num_tasks);
-fprintf('\nSepar Acceptance ratio: %.2f\n', accepted_separate / num_tasks);
-fprintf('\nHe    Acceptance ratio: %.2f\n', accepted_he / num_tasks);
+fprintf('Joint Acceptance ratio: %.2f\n', accepted_joint / num_tasks);
+fprintf('Separ Acceptance ratio: %.2f\n', accepted_separate / num_tasks);
+fprintf('He    Acceptance ratio: %.2f\n', accepted_he / num_tasks);
 
 % fprintf('\nJoint    #Accepted: %d\n', accepted_joint);
 % fprintf('\nSeparate #Accepted: %d\n', accepted_separate);
