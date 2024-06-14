@@ -1,7 +1,7 @@
 
 % Author: Gustaf (From Melani)
 
-function dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f)
+function dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f, U)
     % Modified Melani 'generateDAG' function to use 'generateSchedParams' 
     % instead of 'generateSchedParameters'
 
@@ -20,13 +20,8 @@ function dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f)
     task(i).len = task(i).v(q).accWorkload;
 
     [task(i).v, ~, task(i).wcw] = computeWorstCaseWorkload(task(i).v);
-    % task(i) = generateSchedParameters(i, beta);    % OLD, params: new 
 
-
-    %[task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
-    %task(i) = imbalanceDAG(task(i), 0.5);
-
-    task(i) = generateSchedParams(i, beta, m, f);    
+    task(i) = generateSchedParams(i, beta, m, f, U);    
 
     dag = task(i);
 end

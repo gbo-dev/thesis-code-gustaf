@@ -1,4 +1,4 @@
-% 
+ % 
 % cptasks - A MATLAB(R) implementation of schedulability tests for
 % conditional and parallel tasks
 %
@@ -8,7 +8,7 @@
 % cptasks is free software; you can redistribute it
 % and/or modify it under the terms of the GNU General Public License
 % version 2 as published by the Free Software Foundation, 
-% (with a special exception described below).
+% (with a special exception described below).:
 %
 % Linking this code statically or dynamically with other modules is
 % making a combined work based on this code.  Thus, the terms and
@@ -29,6 +29,14 @@
     % Author: 2015 Alessandra Melani (Modified by Gustaf Bodin)
 %
 
+
+% TODO: 
+% 1. Remove bad edges from imbalanced DAG, and make sure lengths, cmaxs etc correspond
+% 2. Test if no imbalance is OK?
+
+% IMPORTANT: 
+% No DAG imbalancing as of now
+
 close all;
 clear all;
 
@@ -47,48 +55,13 @@ p_cond = 0;
 p_par = 0.8;
 p_term = 0.2;
 
-tasksetsPerU = 1;
 addProb = 0.1;
-ave_rate = 25;
-% lost = 0;
-% Umin = 0;
-% Umax = m;
-% U = 0;
-% Ucurr = Umin;
-%stepU = 0.25; % G: 1 or 2 tasks? 
-%stepU = 0.50; % G: 2 or 4 tasks?
-%stepU = 1.5; 
-
-
+save_rate = 25;
 
 task = struct('v', {}, 'D', {}, 'T', {}, 'wcw', {}, 'vol', {}, 'len', {},...
     'R', {}, 'mksp', {}, 'Z', {}, 'W', {}, 'maxWCET', {}, 'Wfmax', {},...
     'Lfmax', {}, 'cmaxs', {}, 'lengths', {}, 'paths',{});
 
-accepted_joint = 0;
-failed_separate = 0;
-accepted_he = 0;
-m_sum = 0;
-
-diff_sum = 0;
-joint_dom = 0;
-joint_smaller = 0;
-
-diff = 0; 
-
-joint_delta_sum = 0;
-separ_delta_sum = 0;
-joint_equal_separate = 0; 
-
-
-% TODO: 
-% 1. Base DAG task generation from Utilization instead: use either of the two suggested techniques of Risat
-    % Use UUnifast to generate tasksets with U = m
-% 2. Implement environment for running tests for tasksets 
-% 3. Produce acceptance ratio figures 
-
-% NOTE: 
-% U = m: either normalized [0, 1] or absolute [0, m]
 
 print = 0; 
 print_dag = 0;
@@ -98,103 +71,146 @@ Cmin = 10;
 Cmax = 200;
 beta = 0.1;
 
-f = 2;
-%num_tasks = 1000;
+f = 5;
+num_tasks = 10;
 
+stepU = 0.25;
 U = 4;
-n = 4;
 m = U;
 Umin = 0; 
 Ucurr = 0;
 
-stepU = 0.25;
-tasksetsPerU = 50;
+% 1x16?
+vectorUSeparate = zeros(1, (U - Umin) / stepU);
+vectorUJoint = zeros(1, (U - Umin) / stepU);
 
-nTasksets = tasksetsPerU * (U - Umin) / stepU;
-separateFailedTasksets = 0;
-first_light = 1;
-light_U_sum = 0;
+% NOTE: Single DAG testing:
+% Step over each utilization, generating X number of DAGs for each utilization
 
-% U: fixed
-% n: fixed
+while 1
+    Ucurr = Ucurr + stepU;
+    fprintf("Ucurr: %.2f\n", Ucurr);
 
-for x = 1 : nTasksets
-    % For each taskset, split the utilization into n tasks
-    vector_U = UUniFast(n, U);
+    % Reset
+    okSM = 0;
+    okJM = 0;
+    okHE = 0;
 
-    % Sort vector in descending order to handle light tasks last?
-    vector_U = sort(vector_U, 'descend');
+    for i = 1 : num_tasks
+        dag = generateDAGSingle(i, rec_depth, Cmin, Cmax, beta, addProb, print, Ucurr, m, f);
+        %task(i) = dag;
 
-    m_curr = m;
+        [~, okSM] = runSM_RT(dag, f, m, okSM);
+        [~, okJM] = runJM_RT(dag, f, m, okJM);
+        %[~, okHE] = runHE_RT(dag, f, m, okHE);
+    end
 
-    for i = 1 : n
-        dag = generateDAG(i, rec_depth, Cmin, Cmax, beta, addProb, print, m, f, vector_U(i));
-        task(i) = dag;
+    indexU  = ceil(Ucurr / stepU);
+    separate_accepted_ratio = okSM / num_tasks;
+    vectorUSeparate(1, indexU) = separate_accepted_ratio;
 
-        if vector_U(i) > 1
-            % Task is heavy
-            m_separate = requiredProcsSeparate(task(i));
+    joint_accepted_ratio = okJM / num_tasks;
+    vectorUJoint(1, indexU) = joint_accepted_ratio;
 
-            if m_separate > m
-                separateFailedTasksets = separateFailedTasksets + 1;
-                break;
-            end
-
-            r_sm = SM_RT(task(i), f, m_separate);
-            if r_sm > task(i).D
-                separateFailedTasksets = separateFailedTasksets + 1;
-                break;
-            end
-
-            % Accepted task
-            % Decrease processors by number of processors assigned to this task
-            m_curr = m_curr - m_separate;
-            continue;
-        end
-
-        if vector_U(i) <= 1
-
-            fprintf("m_curr: %d\n", m_curr);
-            % Task is light 
-            % Remaining processors avaialbe to light tasks 
-
-            if first_light == 1
-                for j = i : n
-                    light_U_sum = light_U_sum + vector_U(j);
-                end
-                first_light = 0;
-                if light_U_sum > m_curr
-                    % Scheduling this taskset is not possible
-                    failed_separate = failed_separate + 1;
-                    break;
-                end
-
-                % Find response time and check deadline for this task
-                R_SM = SM_RT(task(i), f, m_curr);
-                if R_SM > task(i).D
-                    % Scheduling this taskset is not possible
-                    failed_separate = failed_separate + 1;
-                    break;
-                end
-            end 
-        end
-
+    if Ucurr >= U
+        break;
     end
 end
 
-fprintf("nTasksets: %d\n", nTasksets);
-acceptance_ratio = (nTasksets - failed_separate) / nTasksets;
-fprintf('Acceptance ratio: %.2f\n', acceptance_ratio);
+x = (Umin+stepU):stepU:U;
+plot(x, vectorUSeparate(1, :));
+hold on;
+plot(x, vectorUJoint(1, :));
+
+xlabel('Utilization');
+ylabel('Acceptance');
+title('Acceptance vs Utilization');
+
+
+function [r_sm, okSM] = runSM_RT(dag, f, m, okSM)
+    r_sm = SM_RT(dag, f, m);
+    if r_sm <= dag.D
+        okSM = okSM + 1;
+    end
+end
+
+function [r_jm, okJM] = runJM_RT(dag, f, m, okJM)
+    r_jm = JM_RT(dag, f, m);
+    if r_jm <= dag.D
+        okJM = okJM + 1;
+    end
+end
+
+function [r_he, okHE] = runHE_RT(dag, f, m, okHE)
+    r_he = HE_RT(dag, f, m);
+    if r_he <= dag.D
+        okHE = okHE + 1;
+    end
+end
+
+function dag = generateDAGSingle(i, rec_depth, Cmin, Cmax, beta, addProb, print, Ucurr, m, f)
+
+    global task;
+
+    v = struct('pred', {}, 'succ', {}, 'cond', {}, 'depth', {}, 'width', {},...
+    'C', {}, 'accWorkload', {}, 'condPred', {}, 'branchList', {}, 'RevRel', {});
+
+    task(i).v = expandTaskSeriesParallel(v, [], [], rec_depth, 0, 0);
+    task(i).v = assignWCETs(task(i).v, Cmin, Cmax);
+    task(i).v = makeItDAG(task(i).v, addProb);
+
+    task(i).v = computeAccWorkload(task(i).v);
+    [~, q] = max([task(i).v.accWorkload]);
+    cp = getCP(q, task(i).v);
+    task(i).len = task(i).v(q).accWorkload;
+
+    [task(i).v, ~, task(i).wcw] = computeWorstCaseWorkload(task(i).v);
+
+    task(i).W = computeVolume(task(i).v);
+
+    [task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
+    %task(i) = generateImbalancedDAG(task(i), 0.5);
+    task(i) = generatePeriodSingle(task(i), Ucurr);    
+    task(i) = generateDeadlineSingle(task(i), beta, m, f);
+    dag = task(i);
+end
+
+function dag = generateImbalancedDAG(dag, percentage)
+    dag = imbalanceDAG(dag, percentage);
+    [dag.cmaxs, dag.lengths, dag.paths] = getAllPaths(dag.v);
+end
+
+function dag = generatePeriodSingle(dag, Ucurr)
+    % TODO: Ensure ceil is OK here
+    dag.T = ceil(dag.W / Ucurr);
+end
+
+function dag = generateDeadlineSingle(dag, beta, m, f)
+
+    dag.maxWCET = findMaxWCET(dag);
+    dag.Wfmax = dag.W + dag.maxWCET * f;
+    [dag.Lfmax, ~] = longestFaultyPath(dag, f);
+
+    LowerBoundOnValidDeadline = max(dag.Wfmax/m, dag.Lfmax);
+
+    if LowerBoundOnValidDeadline > dag.T
+        %fprintf("ANOMALY: Deadline greater than period of task\n");
+    end
+    %dag.D = LowerBoundOnValidDeadline * 1.02; 
+    % NOTE: temporary
+    dag.D = dag.T;
+end
 
 function m = requiredProcsSeparate(dag)
     m = ceil((dag.Wfmax - dag.Lfmax) / (dag.D - dag.Lfmax));
 end
 
-% function m = requiredProcsJoint(dag, f)
-%     for q = 0:f
-%
-%     end
-% end
+function m = requiredProcsJoint(dag, f)
+    for q = 0:f
+
+    end
+end
+
 
 % function deadline = generateDeadline(dag)
 %
