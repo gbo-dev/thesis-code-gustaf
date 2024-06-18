@@ -71,11 +71,11 @@ Cmin = 10;
 Cmax = 200;
 beta = 0.1;
 
-f = 5;
+f = 10;
 num_tasks = 10;
 
 stepU = 0.25;
-U = 4;
+U = 16;
 m = U;
 Umin = 0; 
 Ucurr = 0;
@@ -83,6 +83,7 @@ Ucurr = 0;
 % 1x16?
 vectorUSeparate = zeros(1, (U - Umin) / stepU);
 vectorUJoint = zeros(1, (U - Umin) / stepU);
+vectorUHe = zeros(1, (U - Umin) / stepU);
 
 % NOTE: Single DAG testing:
 % Step over each utilization, generating X number of DAGs for each utilization
@@ -102,7 +103,7 @@ while 1
 
         [~, okSM] = runSM_RT(dag, f, m, okSM);
         [~, okJM] = runJM_RT(dag, f, m, okJM);
-        %[~, okHE] = runHE_RT(dag, f, m, okHE);
+        [~, okHE] = runHE_RT(dag, f, m, okHE);
     end
 
     indexU  = ceil(Ucurr / stepU);
@@ -111,6 +112,9 @@ while 1
 
     joint_accepted_ratio = okJM / num_tasks;
     vectorUJoint(1, indexU) = joint_accepted_ratio;
+
+    he_accepted_ratio = okHE / num_tasks;
+    vectorUHe(1, indexU) = he_accepted_ratio;
 
     if Ucurr >= U
         break;
@@ -121,6 +125,8 @@ x = (Umin+stepU):stepU:U;
 plot(x, vectorUSeparate(1, :));
 hold on;
 plot(x, vectorUJoint(1, :));
+hold on;
+plot(x, vectorUHe(1, :));
 
 xlabel('Utilization');
 ylabel('Acceptance');
@@ -143,7 +149,9 @@ end
 
 function [r_he, okHE] = runHE_RT(dag, f, m, okHE)
     r_he = HE_RT(dag, f, m);
+
     if r_he <= dag.D
+        %fprintf("R_He: %d\n", r_he);
         okHE = okHE + 1;
     end
 end
@@ -168,8 +176,12 @@ function dag = generateDAGSingle(i, rec_depth, Cmin, Cmax, beta, addProb, print,
 
     task(i).W = computeVolume(task(i).v);
 
+
+    % NOTE: Temporary, fix imbalanced DAGs later
     [task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
-    %task(i) = generateImbalancedDAG(task(i), 0.5);
+    task(i) = generateImbalancedDAG(task(i), 0.5);
+    [task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
+
     task(i) = generatePeriodSingle(task(i), Ucurr);    
     task(i) = generateDeadlineSingle(task(i), beta, m, f);
     dag = task(i);
