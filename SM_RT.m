@@ -10,11 +10,12 @@ function [r, Lfmax] = SM_RT(dag, f, m)
 
     r = dag.Lfmax + ((dag.Wfmax - dag.Lfmax) / m);
 
+    Lfmax = dag.Lfmax;
     if print == 1
         fprintf('\n#Processors = %d\n', m);
         fprintf('Max WCET = %d\n', maxWCET);
         fprintf('Workload W = %d\n', W);
-        fprintf('Wfmax = %d\n', Wfmax);
-        fprintf('Lfmax = %d\n', Lfmax);
+        fprintf('Wfmax = %d\n', dag.Wfmax);
+        fprintf('Lfmax = %d\n', dag.Lfmax);
     end 
 end 
