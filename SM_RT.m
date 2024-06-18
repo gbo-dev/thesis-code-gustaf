@@ -8,7 +8,7 @@ function [r, Lfmax] = SM_RT(dag, f, m)
     
     %[Lfmax, ~] = longestFaultyPath(dag, f);
 
-    r = dag.Lfmax + (dag.Wfmax - dag.Lfmax) / m;
+    r = dag.Lfmax + ((dag.Wfmax - dag.Lfmax) / m);
 
     if print == 1
         fprintf('\n#Processors = %d\n', m);

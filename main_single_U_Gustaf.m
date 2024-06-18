@@ -1,4 +1,4 @@
- % 
+i% % u % 
 % cptasks - A MATLAB(R) implementation of schedulability tests for
 % conditional and parallel tasks
 %
@@ -71,8 +71,8 @@ Cmin = 10;
 Cmax = 200;
 beta = 0.1;
 
-f = 10;
-num_tasks = 10;
+f = 5;
+num_tasks = 25;
 
 stepU = 0.25;
 U = 16;
@@ -92,21 +92,20 @@ while 1
     Ucurr = Ucurr + stepU;
     fprintf("Ucurr: %.2f\n", Ucurr);
 
-    % Reset
     okSM = 0;
     okJM = 0;
     okHE = 0;
 
     for i = 1 : num_tasks
         dag = generateDAGSingle(i, rec_depth, Cmin, Cmax, beta, addProb, print, Ucurr, m, f);
-        %task(i) = dag;
 
-        [~, okSM] = runSM_RT(dag, f, m, okSM);
-        [~, okJM] = runJM_RT(dag, f, m, okJM);
-        [~, okHE] = runHE_RT(dag, f, m, okHE);
+        [r_sm, okSM] = runSM_RT(dag, f, m, okSM);
+        [r_jm, okJM] = runJM_RT(dag, f, m, okJM);
+        [r_he, okHE] = runHE_RT(dag, f, m, okHE);
     end
 
     indexU  = ceil(Ucurr / stepU);
+
     separate_accepted_ratio = okSM / num_tasks;
     vectorUSeparate(1, indexU) = separate_accepted_ratio;
 
@@ -151,7 +150,6 @@ function [r_he, okHE] = runHE_RT(dag, f, m, okHE)
     r_he = HE_RT(dag, f, m);
 
     if r_he <= dag.D
-        %fprintf("R_He: %d\n", r_he);
         okHE = okHE + 1;
     end
 end
@@ -179,8 +177,8 @@ function dag = generateDAGSingle(i, rec_depth, Cmin, Cmax, beta, addProb, print,
 
     % NOTE: Temporary, fix imbalanced DAGs later
     [task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
-    task(i) = generateImbalancedDAG(task(i), 0.5);
-    [task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
+    %task(i) = generateImbalancedDAG(task(i), 0.5);
+    %[task(i).cmaxs, task(i).lengths, task(i).paths] = getAllPaths(task(i).v);
 
     task(i) = generatePeriodSingle(task(i), Ucurr);    
     task(i) = generateDeadlineSingle(task(i), beta, m, f);
