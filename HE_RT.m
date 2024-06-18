@@ -8,12 +8,13 @@ function R_min = HE_RT(dag, f, m)
 
     R_min = realmax;
     
-    [Lfmax, index] = longestFaultyPath(dag, f);
-    Wfmax = dag.Wfmax;
+    index = dag.longestPathIndex;
 
     % Can't remove more than m-1 processors or number of paths
     k = min(length(dag.lengths), m - 1);
 
+    % Sort the paths in descending order
+    % desc_path_indices contains the indices of the paths in descending order
     [desc_path_lens, desc_path_indices] = sort(dag.lengths, 'descend');
 
     % Nodes no longer considered in next iteration (contained in prev. path)
@@ -23,13 +24,13 @@ function R_min = HE_RT(dag, f, m)
         [path_len_sum, r_nodes] = sumPathLengths(dag, index, desc_path_lens, desc_path_indices, j, removed_nodes);
         removed_nodes = [removed_nodes, r_nodes];
 
-        if (path_len_sum) > Wfmax
+        if (path_len_sum) > dag.Wfmax
             fprintf("ANOMALY, negative interference\n");
-            fprintf("path_len_sum: %d, Wfmax: %d\n", (path_len_sum), Wfmax);
+            fprintf("path_len_sum: %d, Wfmax: %d\n", (path_len_sum), dag.Wfmax);
             continue;
         end
         
-        R = Lfmax + ((Wfmax - path_len_sum) / (m-j));
+        R = dag.Lfmax + ((dag.Wfmax - path_len_sum) / (m-j));
 
         if R == 0 
             fprintf("ANOMALY, R_He = 0\n");
@@ -58,7 +59,6 @@ function [path_len_sum, removed_nodes] = sumPathLengths(dag, index, desc_path_le
         for i = 1:length(dag.paths(desc_path_indices(p)).list)
             if ~ismember(dag.paths(desc_path_indices(p)).list(i), removed_nodes)
                 path_len_sum = path_len_sum + dag.v(dag.paths(desc_path_indices(p)).list(i)).C;
-                %removed_nodes = [removed_nodes, dag.paths(desc_path_indices(p)).list(i)];
                 removed_nodes = [removed_nodes, dag.paths(desc_path_indices(p)).list];
             end
         end

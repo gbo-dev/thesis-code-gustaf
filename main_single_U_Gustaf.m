@@ -60,7 +60,7 @@ save_rate = 25;
 
 task = struct('v', {}, 'D', {}, 'T', {}, 'wcw', {}, 'vol', {}, 'len', {},...
     'R', {}, 'mksp', {}, 'Z', {}, 'W', {}, 'maxWCET', {}, 'Wfmax', {},...
-    'Lfmax', {}, 'cmaxs', {}, 'lengths', {}, 'paths',{});
+    'Lfmax', {}, 'cmaxs', {}, 'lengths', {}, 'paths',{}, 'longestPathIndex', {});
 
 
 print = 0; 
@@ -203,7 +203,7 @@ function dag = generateDeadlineSingle(dag, beta, m, f)
 
     dag.maxWCET = findMaxWCET(dag);
     dag.Wfmax = dag.W + dag.maxWCET * f;
-    [dag.Lfmax, ~] = longestFaultyPath(dag, f);
+    [dag.Lfmax, dag.longestPathIndex] = longestFaultyPath(dag, f);
 
     LowerBoundOnValidDeadline = max(dag.Wfmax/m, dag.Lfmax);
 
