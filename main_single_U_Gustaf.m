@@ -1,4 +1,4 @@
-i% % u % 
+% % u % 
 % cptasks - A MATLAB(R) implementation of schedulability tests for
 % conditional and parallel tasks
 %
@@ -71,11 +71,11 @@ Cmin = 10;
 Cmax = 200;
 beta = 0.1;
 
-f = 5;
+f = 2;
 num_tasks = 25;
 
 stepU = 0.25;
-U = 16;
+U = 4;
 m = U;
 Umin = 0; 
 Ucurr = 0;
@@ -84,6 +84,10 @@ Ucurr = 0;
 vectorUSeparate = zeros(1, (U - Umin) / stepU);
 vectorUJoint = zeros(1, (U - Umin) / stepU);
 vectorUHe = zeros(1, (U - Umin) / stepU);
+
+vectorUSeparate(1, 1) = 1.0;
+vectorUJoint(1, 1) = 1.0;
+vectorUHe(1, 1) = 1.0;
 
 % NOTE: Single DAG testing:
 % Step over each utilization, generating X number of DAGs for each utilization
@@ -104,7 +108,8 @@ while 1
         [r_he, okHE] = runHE_RT(dag, f, m, okHE);
     end
 
-    indexU  = ceil(Ucurr / stepU);
+    % When U = 0: Acceptance ratio = 1
+    indexU  = ceil(Ucurr / stepU) + 1;
 
     separate_accepted_ratio = okSM / num_tasks;
     vectorUSeparate(1, indexU) = separate_accepted_ratio;
@@ -120,7 +125,7 @@ while 1
     end
 end
 
-x = (Umin+stepU):stepU:U;
+x = 0:stepU:U;
 plot(x, vectorUSeparate(1, :));
 hold on;
 plot(x, vectorUJoint(1, :));
@@ -148,7 +153,6 @@ end
 
 function [r_he, okHE] = runHE_RT(dag, f, m, okHE)
     r_he = HE_RT(dag, f, m);
-
     if r_he <= dag.D
         okHE = okHE + 1;
     end

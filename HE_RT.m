@@ -11,27 +11,16 @@ function R_min = HE_RT(dag, f, m)
     [Lfmax, index] = longestFaultyPath(dag, f);
     Wfmax = dag.Wfmax;
 
-    % TODO: Ensure correctness
+    % Can't remove more than m-1 processors or number of paths
     k = min(length(dag.lengths), m - 1);
 
-    %dag.v(dag.paths(1).list(end)).C
-
-    %dagParams = struct('lengths', dag.lengths, 'cmaxs', dag.cmaxs, 'paths', dag.paths);
-    % dagParams = struct2table(dagParams);
-    % dagParams = sortrows(dagParams, 'lengths', 'descend');
-    % dagParams = table2struct(dagParams);
-
-    %dagParams = [dag.lengths; dag.cmaxs; dag.paths];
-    %dagParams = sortrows(dagParams, 1, 'descend')
-
-    % NOTE: index reordering here!!!!!
-    % use indices for paths instead of paths themselves
     [desc_path_lens, desc_path_indices] = sort(dag.lengths, 'descend');
 
+    % Nodes no longer considered in next iteration (contained in prev. path)
     removed_nodes = [];
 
     for j = 0:k
-        [path_len_sum, r_nodes] = sumPathLengths(dag, index, desc_path_lens, j, removed_nodes);
+        [path_len_sum, r_nodes] = sumPathLengths(dag, index, desc_path_lens, desc_path_indices, j, removed_nodes);
         removed_nodes = [removed_nodes, r_nodes];
 
         if (path_len_sum) > Wfmax
@@ -53,9 +42,8 @@ function R_min = HE_RT(dag, f, m)
     end
 end 
 
-function [path_len_sum, removed_nodes] = sumPathLengths(dag, index, desc_path_lens, j, removed_nodes)
+function [path_len_sum, removed_nodes] = sumPathLengths(dag, index, desc_path_lens, desc_path_indices, j, removed_nodes)
 
-    % Use indices for paths instead of paths themselves
     path_len_sum = 0;
     for p = 1:j
         if p == 1
@@ -67,20 +55,13 @@ function [path_len_sum, removed_nodes] = sumPathLengths(dag, index, desc_path_le
             continue;
         end 
 
-        for i = 1:length(dag.paths(p).list)
-            if ~ismember(dag.paths(p).list(i), removed_nodes)
-                % TODO: Use new indices???
-                path_len_sum = path_len_sum + dag.v(dag.paths(p).list(i)).C;
-                removed_nodes = [removed_nodes, dag.paths(p).list(i)];
+        for i = 1:length(dag.paths(desc_path_indices(p)).list)
+            if ~ismember(dag.paths(desc_path_indices(p)).list(i), removed_nodes)
+                path_len_sum = path_len_sum + dag.v(dag.paths(desc_path_indices(p)).list(i)).C;
+                %removed_nodes = [removed_nodes, dag.paths(desc_path_indices(p)).list(i)];
+                removed_nodes = [removed_nodes, dag.paths(desc_path_indices(p)).list];
             end
         end
     end
 end
 
-
-
-
-% Rewriting path functions 
-% Now will save paths as a list/array of nodes
-% so that when we order by path length, we can easily 
-% consider the nodes of each removed longest path as already removed
